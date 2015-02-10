@@ -31,6 +31,7 @@ class Balls(object):
     @cherrypy.tools.json_in()   # all input values are automatically converted to JSON
     def PUT(self, id):
         balls[urldecode(id)] = cherrypy.request.json
+        balls[urldecode(id)]['hop-count'] = balls[urldecode(id)]['hop-count'] + 1    # increase the hop count
         print(str(time.time()) + ': Ball ' + str(id) + ' received. Storing: ' + str(cherrypy.request.json))
 
     def DELETE(self, id):       # needed for deletion after a ball has been requested and therefore passed on to the next client
