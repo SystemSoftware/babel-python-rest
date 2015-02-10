@@ -16,7 +16,8 @@ ownServerURL = 'http://localhost:8080/balls'
 checkInterval = 3 # the amount of seconds to wait before checking the preceding server for new balls
 lastChecked = time.time() # the time we last checked the preceding server for new balls
 
-def clientFunction():
+def poll():
+	'''Polls the preceding server with GET requests for balls and adds received balls to a dictionary. The polling intervall is specified by checkInterval'''
 	global lastChecked
 	response = None
 	# request balls every x seconds from the preceding server, specified via the checkInterval variable
@@ -46,21 +47,25 @@ def clientFunction():
 		else:
 			print(str(lastChecked) + ': HTTP Error while getting new balls: code' + str(req.status_code) + ', reason: ' + req.reason)
 
-    # compare the time-stamps and holdtime of entries in balls with the current time
-    # if the current time is larger than the time-stamp and holdtime, the ball is send to the server with a PUT request
-	for id, ball in list(balls.items()): 
-		currentTime = time.time()
+	def ready(ball, time):
+		'''If the current system time exceeds the sum of time-stamp and holdtime return True'''
 		lastHoldTime = ball['payload'][clientID]+ball['hold-time']
 		if currentTime >= lastHoldTime:
+			return True
+            
+	for id, ball in list(balls.items()):
+		'''Loops over all balls. If a ball is ready it is being send to the server via PUT request'''
+		currentTime = time.time()
+		if ready(ball, currentTime):
 			req = requests.request('PUT', ownServerURL+'/'+id, json = ball) # implicit conversion of ball into JSON
 			print(str(currentTime) + ': Sending ball: ' + str(ball))
-			if req.status_code == requests.codes.ok:		
+			if req.status_code == requests.codes.ok:        
 				balls.pop(id, None)
 			else:
 				print(str(currentTime) + ': HTTP Error while sending ball: code ' + str(req.status_code) + ', reason : ' + req.reason)
 				balls.pop(id, None) # normally, we should retry
 
-	t = threading.Timer(clientSleepTime, clientFunction)
+	t = threading.Timer(clientSleepTime, poll)
 	t.start()
 
-clientFunction()
+poll()
