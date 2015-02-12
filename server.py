@@ -58,6 +58,9 @@ if __name__ == '__main__':
             {'request.dispatch': cherrypy.dispatch.MethodDispatcher()} # automatically dispatch request types (e.g. GET) to their corresponding method
         }
     )
+    cherrypy.config.update({'server.socket_host':'10.42.10.105',
+        'server.socket_port':8080,
+        })
     cherrypy.log.screen = None # for better logging control cherrypy standard logging is turned off
     cherrypy.engine.start()
     cherrypy.engine.block()
